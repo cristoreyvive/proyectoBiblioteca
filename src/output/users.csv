@@ -1,4 +1,4 @@
-username,password,status
-admin,admin123,activo
-empleado,empleado123,activo
-cliente,cliente123,activo
+username,password,status,type
+admin,admin123,activo,administrador
+empleado,empleado123,activo,empleado
+cliente,cliente123,activo,cliente

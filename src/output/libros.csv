@@ -1,35 +1,35 @@
-titulo,nombre
-One Hundred Years of Solitude,Agneta Fassum
-The Girl with the Dragon Tattoo,Joycelin Kinnaird
-The Catcher in the Rye,Kathi Jancey
-Crime and Punishment,Uriah Vina
-Alice's Adventures in Wonderland,Morie Lemon
-The Bell Jar,Levi Dalgarnowch
-Twilight,Jaynell Rodder
-The Road,Ignacio Rawle
-The Sound and the Fury,Nevsa Silliman
-Moby Dick,Archer Bellenie
-The Sun Also Rises,Fulton Regina
-The Odyssey,Angelina Gane
-Les Miserables,Anatola Weatherby
-Anna Karenina,Sarette Cholerton
-Divergent,Dicky Achromov
-The Picture of Dorian Gray,Dewain Vannuccinii
-Jane Eyre,Julius Dewi
-Frankenstein,Courtenay Garnham
-Lord of the Flies,Glenn Hollyar
-The Shining,Nancy Dellatorre
-The Hobbit,Horatius Nind
-Beloved,Heddie Sandey
-The Handmaid's Tale,Tarra Adamek
-The Hunger Games,Kellsie Stote
-Wuthering Heights,Amanda Harriot
-The Scarlet Letter,Pen Foreman
-Harry Potter and the Sorcerer's Stone,Giovanna Jimmes
-Pride and Prejudice,Nan Balsellie
-The Count of Monte Cristo,Leon Devenish
-The Adventures of Huckleberry Finn,Upton Charters
-Anna Karenina,Gaylord McIlveen
-The Fault in Our Stars,Audrie Comber
-The Stand,Shermie Elders
-Gone Girls,Saunders Duggon
+titulo,nombre,estado,comprado_por
+One Hundred Years of Solitude,Agneta Fassum,disponible,none
+The Girl with the Dragon Tattoo,Joycelin Kinnaird,disponible,none
+The Catcher in the Rye,Kathi Jancey,disponible,none
+Crime and Punishment,Uriah Vina,disponible,none
+Alice's Adventures in Wonderland,Morie Lemon,disponible,none
+The Bell Jar,Levi Dalgarnowch,disponible,none
+Twilight,Jaynell Rodder,disponible,none
+The Road,Ignacio Rawle,disponible,none
+The Sound and the Fury,Nevsa Silliman,disponible,none
+Moby Dick,Archer Bellenie,disponible,none
+The Sun Also Rises,Fulton Regina,disponible,none
+The Odyssey,Angelina Gane,disponible,none
+Les Miserables,Anatola Weatherby,disponible,none
+Anna Karenina,Sarette Cholerton,disponible,none
+Divergent,Dicky Achromov,disponible,none
+The Picture of Dorian Gray,Dewain Vannuccinii,disponible,none
+Jane Eyre,Julius Dewi,disponible,none
+Frankenstein,Courtenay Garnham,disponible,none
+Lord of the Flies,Glenn Hollyar,disponible,none
+The Shining,Nancy Dellatorre,disponible,none
+The Hobbit,Horatius Nind,disponible,none
+Beloved,Heddie Sandey,disponible,none
+The Handmaid's Tale,Tarra Adamek,disponible,none
+The Hunger Games,Kellsie Stote,disponible,none
+Wuthering Heights,Amanda Harriot,disponible,none
+The Scarlet Letter,Pen Foreman,disponible,none
+Harry Potter and the Sorcerer's Stone,Giovanna Jimmes,disponible,none
+Pride and Prejudice,Nan Balsellie,disponible,none
+The Count of Monte Cristo,Leon Devenish,disponible,none
+The Adventures of Huckleberry Finn,Upton Charters,disponible,none
+Anna Karenina,Gaylord McIlveen,disponible,none
+The Fault in Our Stars,Audrie Comber,disponible,none
+The Stand,Shermie Elders,disponible,none
+Gone Girls,Saunders Duggon,disponible,none
