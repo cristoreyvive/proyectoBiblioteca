@@ -4,7 +4,7 @@
 
 using namespace std;
 
-bool login();
+bool login(string &userType);
 void agregarLibro();
 void modificarLibro();
 void eliminarLibro();
@@ -15,7 +15,8 @@ void quitarSuspension();
 
 int main()
 {
-    if (!login())
+    string userType;
+    if (!login(userType))
     {
         cout << "Inicio de sesión fallido. Saliendo del sistema.\n";
         return 1;
@@ -24,7 +25,12 @@ int main()
     int opcion;
     do
     {
-        cout << "1. Agregar libro\n2. Modificar libro\n3. Eliminar libro\n4. Agregar usuario\n5. Eliminar usuario\n6. Suspender usuario\n7. Quitar suspensión\n8. Salir\n";
+        cout << "1. Agregar libro\n2. Modificar libro\n3. Eliminar libro\n";
+        if (userType == "administrador")
+        {
+            cout << "4. Agregar usuario\n5. Eliminar usuario\n6. Suspender usuario\n7. Quitar suspensión\n";
+        }
+        cout << "8. Salir\n";
         cout << "Seleccione una opción: ";
         cin >> opcion;
 
@@ -40,16 +46,28 @@ int main()
             eliminarLibro();
             break;
         case 4:
-            agregarUsuario();
+            if (userType == "administrador")
+                agregarUsuario();
+            else
+                cout << "Opción no válida.\n";
             break;
         case 5:
-            eliminarUsuario();
+            if (userType == "administrador")
+                eliminarUsuario();
+            else
+                cout << "Opción no válida.\n";
             break;
         case 6:
-            suspenderUsuario();
+            if (userType == "administrador")
+                suspenderUsuario();
+            else
+                cout << "Opción no válida.\n";
             break;
         case 7:
-            quitarSuspension();
+            if (userType == "administrador")
+                quitarSuspension();
+            else
+                cout << "Opción no válida.\n";
             break;
         case 8:
             cout << "Saliendo del sistema...\n";
@@ -62,9 +80,9 @@ int main()
     return 0;
 }
 
-bool login()
+bool login(string &userType)
 {
-    string username, password, stored_username, stored_password, status;
+    string username, password, stored_username, stored_password, status, type;
     cout << "Ingrese su nombre de usuario: ";
     cin >> username;
     cout << "Ingrese su contraseña: ";
@@ -74,44 +92,32 @@ bool login()
     if (usersFile.is_open())
     {
         bool encontrado = false;
-        while (getline(usersFile, stored_username, ',') && getline(usersFile, stored_password, ',') && getline(usersFile, status))
+        while (getline(usersFile, stored_username, ',') && getline(usersFile, stored_password, ',') && getline(usersFile, status, ',') && getline(usersFile, type))
         {
             stored_username.erase(0, stored_username.find_first_not_of(" \t"));
             stored_username.erase(stored_username.find_last_not_of(" \t") + 1);
-            stored_password.erase(0, stored_password.find_first_not_of(" \t"));
-            stored_password.erase(stored_password.find_last_not_of(" \t") + 1);
-            status.erase(0, status.find_first_not_of(" \t"));
-            status.erase(status.find_last_not_of(" \t") + 1);
 
             if (username == stored_username && password == stored_password)
             {
                 if (status == "suspendido")
                 {
-                    cout << "Su cuenta está suspendida. Acceso denegado.\n";
+                    cout << "El usuario está suspendido y tiene denegado el ingreso.\n";
                     return false;
                 }
-                encontrado = true;
-                break;
+                cout << "Inicio de sesión exitoso.\n";
+                userType = type;
+                usersFile.close();
+                return true;
             }
         }
+        cout << "Nombre de usuario o contraseña incorrectos.\n";
         usersFile.close();
-
-        if (encontrado)
-        {
-            cout << "Inicio de sesión exitoso.\n";
-            return true;
-        }
-        else
-        {
-            cout << "Nombre de usuario o contraseña incorrectos.\n";
-            return false;
-        }
     }
     else
     {
         cout << "No se pudo abrir el archivo de usuarios.\n";
-        return false;
     }
+    return false;
 }
 
 void agregarLibro()
@@ -241,16 +247,18 @@ void eliminarLibro()
 
 void agregarUsuario()
 {
-    string username, password;
+    string username, password, type;
     cout << "Ingrese el nombre de usuario: ";
     cin >> username;
     cout << "Ingrese la contraseña: ";
     cin >> password;
+    cout << "Ingrese el tipo de usuario (admin/empleado/cliente): ";
+    cin >> type;
 
     ofstream usersFile("users.csv", ios::app);
     if (usersFile.is_open())
     {
-        usersFile << username << "," << password << "\n";
+        usersFile << username << "," << password << ",activo," << type << "\n";
         usersFile.close();
         cout << "Usuario agregado exitosamente.\n";
     }
@@ -328,11 +336,14 @@ void suspenderUsuario()
             string resto = linea.substr(comaPos + 1);
             size_t comaPos2 = resto.find(',');
             string passwordActual = resto.substr(0, comaPos2);
-            string estado = resto.substr(comaPos2 + 1);
+            string estadoYTipo = resto.substr(comaPos2 + 1);
+            size_t comaPos3 = estadoYTipo.find(',');
+            string estado = estadoYTipo.substr(0, comaPos3);
+            string tipo = estadoYTipo.substr(comaPos3 + 1);
 
             if (usernameActual == username)
             {
-                archivoTemporal << usernameActual << "," << passwordActual << ",suspendido\n";
+                archivoTemporal << usernameActual << "," << passwordActual << ",suspendido," << tipo << "\n";
                 encontrado = true;
             }
             else
@@ -381,11 +392,14 @@ void quitarSuspension()
             string resto = linea.substr(comaPos + 1);
             size_t comaPos2 = resto.find(',');
             string passwordActual = resto.substr(0, comaPos2);
-            string estado = resto.substr(comaPos2 + 1);
+            string estadoYTipo = resto.substr(comaPos2 + 1);
+            size_t comaPos3 = estadoYTipo.find(',');
+            string estado = estadoYTipo.substr(0, comaPos3);
+            string tipo = estadoYTipo.substr(comaPos3 + 1);
 
             if (usernameActual == username)
             {
-                archivoTemporal << usernameActual << "," << passwordActual << ",activo\n";
+                archivoTemporal << usernameActual << "," << passwordActual << ",activo," << tipo << "\n";
                 encontrado = true;
             }
             else
