@@ -20,68 +20,91 @@ int main()
     string userType, username;
     if (!login(userType, username))
     {
-        cout << "Inicio de sesión fallido. Saliendo del sistema.\n";
+        cout << "Inicio de sesion fallido. Saliendo del sistema.\n";
         return 1;
     }
 
     int opcion;
     do
     {
-        cout << "1. Agregar libro\n2. Modificar libro\n3. Eliminar libro\n";
+        cout << "Menu:\n";
+        if (userType == "administrador" || userType == "empleado")
+        {
+            cout << "1. Agregar libro\n2. Modificar libro\n3. Eliminar libro\n";
+        }
         if (userType == "administrador")
         {
-            cout << "4. Agregar usuario\n5. Eliminar usuario\n6. Suspender usuario\n7. Quitar suspensión\n";
+            cout << "4. Agregar usuario\n5. Eliminar usuario\n6. Suspender usuario\n7. Quitar suspension\n";
         }
-        cout << "8. Comprar libro\n9. Devolver libro\n10. Salir\n";
-        cout << "Seleccione una opción: ";
+        if (userType == "administrador" || userType == "cliente")
+        {
+            cout << "8. Comprar libro\n9. Devolver libro\n";
+        }
+        cout << "10. Salir\n";
+        cout << "Seleccione una opcion: ";
         cin >> opcion;
 
         switch (opcion)
         {
         case 1:
-            agregarLibro();
+            if (userType == "administrador" || userType == "empleado")
+                agregarLibro();
+            else
+                cout << "Opcion no valida.\n";
             break;
         case 2:
-            modificarLibro();
+            if (userType == "administrador" || userType == "empleado")
+                modificarLibro();
+            else
+                cout << "Opcion no valida.\n";
             break;
         case 3:
-            eliminarLibro();
+            if (userType == "administrador" || userType == "empleado")
+                eliminarLibro();
+            else
+                cout << "Opcion no valida.\n";
             break;
         case 4:
             if (userType == "administrador")
                 agregarUsuario();
             else
-                cout << "Opción no válida.\n";
+                cout << "Opcion no valida.\n";
             break;
         case 5:
             if (userType == "administrador")
                 eliminarUsuario();
             else
-                cout << "Opción no válida.\n";
+                cout << "Opcion no valida.\n";
             break;
         case 6:
             if (userType == "administrador")
                 suspenderUsuario();
             else
-                cout << "Opción no válida.\n";
+                cout << "Opcion no valida.\n";
             break;
         case 7:
             if (userType == "administrador")
                 quitarSuspension();
             else
-                cout << "Opción no válida.\n";
+                cout << "Opcion no valida.\n";
             break;
         case 8:
-            comprarLibro(username);
+            if (userType == "administrador" || userType == "cliente")
+                comprarLibro(username);
+            else
+                cout << "Opcion no valida.\n";
             break;
         case 9:
-            devolverLibro(username);
+            if (userType == "administrador" || userType == "cliente")
+                devolverLibro(username);
+            else
+                cout << "Opcion no valida.\n";
             break;
         case 10:
             cout << "Saliendo del sistema...\n";
             break;
         default:
-            cout << "Opción no válida.\n";
+            cout << "Opcion no valida.\n";
         }
     } while (opcion != 10);
 
@@ -99,7 +122,6 @@ bool login(string &userType, string &username)
     ifstream usersFile("users.csv");
     if (usersFile.is_open())
     {
-        bool encontrado = false;
         while (getline(usersFile, stored_username, ',') && getline(usersFile, stored_password, ',') && getline(usersFile, status, ',') && getline(usersFile, type))
         {
             stored_username.erase(0, stored_username.find_first_not_of(" \t"));
@@ -109,10 +131,10 @@ bool login(string &userType, string &username)
             {
                 if (status == "suspendido")
                 {
-                    cout << "El usuario está suspendido y tiene denegado el ingreso.\n";
+                    cout << "El usuario esta suspendido y tiene denegado el ingreso.\n";
                     return false;
                 }
-                cout << "Inicio de sesión exitoso.\n";
+                cout << "Inicio de sesion exitoso.\n";
                 userType = type;
                 usersFile.close();
                 return true;
@@ -131,7 +153,7 @@ bool login(string &userType, string &username)
 void agregarLibro()
 {
     string titulo, autor;
-    cout << "Ingrese el título del libro: ";
+    cout << "Ingrese el titulo del libro: ";
     cin.ignore();
     getline(cin, titulo);
     cout << "Ingrese el autor del libro: ";
@@ -153,11 +175,11 @@ void agregarLibro()
 void modificarLibro()
 {
     string titulo, nuevoTitulo, nuevoAutor, linea;
-    cout << "Ingrese el título del libro a modificar: ";
+    cout << "Ingrese el titulo del libro a modificar: ";
     cin.ignore();
     getline(cin, titulo);
 
-    cout << "Ingrese el nuevo título del libro: ";
+    cout << "Ingrese el nuevo titulo del libro: ";
     getline(cin, nuevoTitulo);
     cout << "Ingrese el nuevo autor del libro: ";
     getline(cin, nuevoAutor);
@@ -214,7 +236,7 @@ void modificarLibro()
 void eliminarLibro()
 {
     string titulo, linea;
-    cout << "Ingrese el título del libro a eliminar: ";
+    cout << "Ingrese el titulo del libro a eliminar: ";
     cin.ignore();
     getline(cin, titulo);
 
@@ -345,19 +367,17 @@ void suspenderUsuario()
         bool encontrado = false;
         while (getline(archivoEntrada, linea))
         {
-            size_t comaPos = linea.find(',');
-            string usernameActual = linea.substr(0, comaPos);
-            string resto = linea.substr(comaPos + 1);
-            size_t comaPos2 = resto.find(',');
-            string passwordActual = resto.substr(0, comaPos2);
-            string estadoYTipo = resto.substr(comaPos2 + 1);
-            size_t comaPos3 = estadoYTipo.find(',');
-            string estado = estadoYTipo.substr(0, comaPos3);
-            string tipo = estadoYTipo.substr(comaPos3 + 1);
+            size_t comaPos1 = linea.find(',');
+            string usernameActual = linea.substr(0, comaPos1);
+            size_t comaPos2 = linea.find(',', comaPos1 + 1);
+            string password = linea.substr(comaPos1 + 1, comaPos2 - comaPos1 - 1);
+            size_t comaPos3 = linea.find(',', comaPos2 + 1);
+            string status = linea.substr(comaPos2 + 1, comaPos3 - comaPos2 - 1);
+            string type = linea.substr(comaPos3 + 1);
 
             if (usernameActual == username)
             {
-                archivoTemporal << usernameActual << "," << passwordActual << ",suspendido," << tipo << "\n";
+                archivoTemporal << usernameActual << "," << password << ",suspendido," << type << "\n";
                 encontrado = true;
             }
             else
@@ -389,7 +409,7 @@ void suspenderUsuario()
 void quitarSuspension()
 {
     string username, linea;
-    cout << "Ingrese el nombre de usuario al que desea quitarle la suspensión: ";
+    cout << "Ingrese el nombre de usuario al que quiere quitar la suspension: ";
     cin.ignore();
     getline(cin, username);
 
@@ -401,19 +421,17 @@ void quitarSuspension()
         bool encontrado = false;
         while (getline(archivoEntrada, linea))
         {
-            size_t comaPos = linea.find(',');
-            string usernameActual = linea.substr(0, comaPos);
-            string resto = linea.substr(comaPos + 1);
-            size_t comaPos2 = resto.find(',');
-            string passwordActual = resto.substr(0, comaPos2);
-            string estadoYTipo = resto.substr(comaPos2 + 1);
-            size_t comaPos3 = estadoYTipo.find(',');
-            string estado = estadoYTipo.substr(comaPos3);
-            string tipo = estadoYTipo.substr(comaPos3 + 1);
+            size_t comaPos1 = linea.find(',');
+            string usernameActual = linea.substr(0, comaPos1);
+            size_t comaPos2 = linea.find(',', comaPos1 + 1);
+            string password = linea.substr(comaPos1 + 1, comaPos2 - comaPos1 - 1);
+            size_t comaPos3 = linea.find(',', comaPos2 + 1);
+            string status = linea.substr(comaPos2 + 1, comaPos3 - comaPos2 - 1);
+            string type = linea.substr(comaPos3 + 1);
 
             if (usernameActual == username)
             {
-                archivoTemporal << usernameActual << "," << passwordActual << ",activo," << tipo << "\n";
+                archivoTemporal << usernameActual << "," << password << ",activo," << type << "\n";
                 encontrado = true;
             }
             else
@@ -429,7 +447,7 @@ void quitarSuspension()
 
         if (encontrado)
         {
-            cout << "Se ha quitado la suspensión al usuario exitosamente.\n";
+            cout << "Suspension quitada exitosamente.\n";
         }
         else
         {
@@ -445,7 +463,7 @@ void quitarSuspension()
 void comprarLibro(const string &username)
 {
     string titulo, linea;
-    cout << "Ingrese el título del libro que desea comprar: ";
+    cout << "Ingrese el titulo del libro que desea comprar: ";
     cin.ignore();
     getline(cin, titulo);
 
@@ -467,18 +485,9 @@ void comprarLibro(const string &username)
             string estado = estadoYCompradoPor.substr(0, comaPos3);
             string compradoPor = estadoYCompradoPor.substr(comaPos3 + 1);
 
-            if (tituloActual == titulo)
+            if (tituloActual == titulo && estado == "disponible")
             {
-                if (estado == "disponible")
-                {
-                    archivoTemporal << tituloActual << "," << autorActual << ",comprado," << username << "\n";
-                    cout << "Libro comprado exitosamente.\n";
-                }
-                else
-                {
-                    cout << "El libro no está disponible para compra.\n";
-                    archivoTemporal << linea << "\n";
-                }
+                archivoTemporal << tituloActual << "," << autorActual << ",comprado," << username << "\n";
                 encontrado = true;
             }
             else
@@ -492,9 +501,13 @@ void comprarLibro(const string &username)
         remove("libros.csv");
         rename("libros_temp.csv", "libros.csv");
 
-        if (!encontrado)
+        if (encontrado)
         {
-            cout << "Libro no encontrado.\n";
+            cout << "Libro comprado exitosamente.\n";
+        }
+        else
+        {
+            cout << "Libro no encontrado o no disponible.\n";
         }
     }
     else
@@ -506,7 +519,7 @@ void comprarLibro(const string &username)
 void devolverLibro(const string &username)
 {
     string titulo, linea;
-    cout << "Ingrese el título del libro que desea devolver: ";
+    cout << "Ingrese el titulo del libro que desea devolver: ";
     cin.ignore();
     getline(cin, titulo);
 
@@ -528,23 +541,9 @@ void devolverLibro(const string &username)
             string estado = estadoYCompradoPor.substr(0, comaPos3);
             string compradoPor = estadoYCompradoPor.substr(comaPos3 + 1);
 
-            if (tituloActual == titulo)
+            if (tituloActual == titulo && estado == "comprado" && compradoPor == username)
             {
-                if (estado == "comprado" && compradoPor == username)
-                {
-                    archivoTemporal << tituloActual << "," << autorActual << ",disponible,none\n";
-                    cout << "Libro devuelto exitosamente.\n";
-                }
-                else if (estado == "comprado" && compradoPor != username)
-                {
-                    cout << "Este libro fue comprado por otro usuario.\n";
-                    archivoTemporal << linea << "\n";
-                }
-                else
-                {
-                    cout << "El libro no está actualmente comprado.\n";
-                    archivoTemporal << linea << "\n";
-                }
+                archivoTemporal << tituloActual << "," << autorActual << ",disponible,none\n";
                 encontrado = true;
             }
             else
@@ -558,9 +557,13 @@ void devolverLibro(const string &username)
         remove("libros.csv");
         rename("libros_temp.csv", "libros.csv");
 
-        if (!encontrado)
+        if (encontrado)
         {
-            cout << "Libro no encontrado.\n";
+            cout << "Libro devuelto exitosamente.\n";
+        }
+        else
+        {
+            cout << "Libro no encontrado o no comprado por usted.\n";
         }
     }
     else
