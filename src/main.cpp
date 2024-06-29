@@ -4,7 +4,7 @@
 
 using namespace std;
 
-bool login(string &userType);
+bool login(string &userType, string &username);
 void agregarLibro();
 void modificarLibro();
 void eliminarLibro();
@@ -12,11 +12,13 @@ void agregarUsuario();
 void eliminarUsuario();
 void suspenderUsuario();
 void quitarSuspension();
+void comprarLibro(const string &username);
+void devolverLibro(const string &username);
 
 int main()
 {
-    string userType;
-    if (!login(userType))
+    string userType, username;
+    if (!login(userType, username))
     {
         cout << "Inicio de sesión fallido. Saliendo del sistema.\n";
         return 1;
@@ -30,7 +32,7 @@ int main()
         {
             cout << "4. Agregar usuario\n5. Eliminar usuario\n6. Suspender usuario\n7. Quitar suspensión\n";
         }
-        cout << "8. Salir\n";
+        cout << "8. Comprar libro\n9. Devolver libro\n10. Salir\n";
         cout << "Seleccione una opción: ";
         cin >> opcion;
 
@@ -70,19 +72,25 @@ int main()
                 cout << "Opción no válida.\n";
             break;
         case 8:
+            comprarLibro(username);
+            break;
+        case 9:
+            devolverLibro(username);
+            break;
+        case 10:
             cout << "Saliendo del sistema...\n";
             break;
         default:
             cout << "Opción no válida.\n";
         }
-    } while (opcion != 8);
+    } while (opcion != 10);
 
     return 0;
 }
 
-bool login(string &userType)
+bool login(string &userType, string &username)
 {
-    string username, password, stored_username, stored_password, status, type;
+    string password, stored_username, stored_password, status, type;
     cout << "Ingrese su nombre de usuario: ";
     cin >> username;
     cout << "Ingrese su contraseña: ";
@@ -132,7 +140,7 @@ void agregarLibro()
     ofstream librosFile("libros.csv", ios::app);
     if (librosFile.is_open())
     {
-        librosFile << titulo << "," << autor << "\n";
+        librosFile << titulo << "," << autor << ",disponible,none\n";
         librosFile.close();
         cout << "Libro agregado exitosamente.\n";
     }
@@ -164,11 +172,17 @@ void modificarLibro()
         {
             size_t comaPos = linea.find(',');
             string tituloActual = linea.substr(0, comaPos);
-            string autorActual = linea.substr(comaPos + 1);
+            string resto = linea.substr(comaPos + 1);
+            size_t comaPos2 = resto.find(',');
+            string autorActual = resto.substr(0, comaPos2);
+            string estadoYCompradoPor = resto.substr(comaPos2 + 1);
+            size_t comaPos3 = estadoYCompradoPor.find(',');
+            string estado = estadoYCompradoPor.substr(0, comaPos3);
+            string compradoPor = estadoYCompradoPor.substr(comaPos3 + 1);
 
             if (tituloActual == titulo)
             {
-                archivoTemporal << nuevoTitulo << "," << nuevoAutor << "\n";
+                archivoTemporal << nuevoTitulo << "," << nuevoAutor << "," << estado << "," << compradoPor << "\n";
                 encontrado = true;
             }
             else
@@ -394,7 +408,7 @@ void quitarSuspension()
             string passwordActual = resto.substr(0, comaPos2);
             string estadoYTipo = resto.substr(comaPos2 + 1);
             size_t comaPos3 = estadoYTipo.find(',');
-            string estado = estadoYTipo.substr(0, comaPos3);
+            string estado = estadoYTipo.substr(comaPos3);
             string tipo = estadoYTipo.substr(comaPos3 + 1);
 
             if (usernameActual == username)
@@ -425,5 +439,132 @@ void quitarSuspension()
     else
     {
         cout << "No se pudo abrir el archivo de usuarios.\n";
+    }
+}
+
+void comprarLibro(const string &username)
+{
+    string titulo, linea;
+    cout << "Ingrese el título del libro que desea comprar: ";
+    cin.ignore();
+    getline(cin, titulo);
+
+    ifstream archivoEntrada("libros.csv");
+    ofstream archivoTemporal("libros_temp.csv");
+
+    if (archivoEntrada.is_open() && archivoTemporal.is_open())
+    {
+        bool encontrado = false;
+        while (getline(archivoEntrada, linea))
+        {
+            size_t comaPos = linea.find(',');
+            string tituloActual = linea.substr(0, comaPos);
+            string resto = linea.substr(comaPos + 1);
+            size_t comaPos2 = resto.find(',');
+            string autorActual = resto.substr(0, comaPos2);
+            string estadoYCompradoPor = resto.substr(comaPos2 + 1);
+            size_t comaPos3 = estadoYCompradoPor.find(',');
+            string estado = estadoYCompradoPor.substr(0, comaPos3);
+            string compradoPor = estadoYCompradoPor.substr(comaPos3 + 1);
+
+            if (tituloActual == titulo)
+            {
+                if (estado == "disponible")
+                {
+                    archivoTemporal << tituloActual << "," << autorActual << ",comprado," << username << "\n";
+                    cout << "Libro comprado exitosamente.\n";
+                }
+                else
+                {
+                    cout << "El libro no está disponible para compra.\n";
+                    archivoTemporal << linea << "\n";
+                }
+                encontrado = true;
+            }
+            else
+            {
+                archivoTemporal << linea << "\n";
+            }
+        }
+        archivoEntrada.close();
+        archivoTemporal.close();
+
+        remove("libros.csv");
+        rename("libros_temp.csv", "libros.csv");
+
+        if (!encontrado)
+        {
+            cout << "Libro no encontrado.\n";
+        }
+    }
+    else
+    {
+        cout << "No se pudo abrir el archivo de libros.\n";
+    }
+}
+
+void devolverLibro(const string &username)
+{
+    string titulo, linea;
+    cout << "Ingrese el título del libro que desea devolver: ";
+    cin.ignore();
+    getline(cin, titulo);
+
+    ifstream archivoEntrada("libros.csv");
+    ofstream archivoTemporal("libros_temp.csv");
+
+    if (archivoEntrada.is_open() && archivoTemporal.is_open())
+    {
+        bool encontrado = false;
+        while (getline(archivoEntrada, linea))
+        {
+            size_t comaPos = linea.find(',');
+            string tituloActual = linea.substr(0, comaPos);
+            string resto = linea.substr(comaPos + 1);
+            size_t comaPos2 = resto.find(',');
+            string autorActual = resto.substr(0, comaPos2);
+            string estadoYCompradoPor = resto.substr(comaPos2 + 1);
+            size_t comaPos3 = estadoYCompradoPor.find(',');
+            string estado = estadoYCompradoPor.substr(0, comaPos3);
+            string compradoPor = estadoYCompradoPor.substr(comaPos3 + 1);
+
+            if (tituloActual == titulo)
+            {
+                if (estado == "comprado" && compradoPor == username)
+                {
+                    archivoTemporal << tituloActual << "," << autorActual << ",disponible,none\n";
+                    cout << "Libro devuelto exitosamente.\n";
+                }
+                else if (estado == "comprado" && compradoPor != username)
+                {
+                    cout << "Este libro fue comprado por otro usuario.\n";
+                    archivoTemporal << linea << "\n";
+                }
+                else
+                {
+                    cout << "El libro no está actualmente comprado.\n";
+                    archivoTemporal << linea << "\n";
+                }
+                encontrado = true;
+            }
+            else
+            {
+                archivoTemporal << linea << "\n";
+            }
+        }
+        archivoEntrada.close();
+        archivoTemporal.close();
+
+        remove("libros.csv");
+        rename("libros_temp.csv", "libros.csv");
+
+        if (!encontrado)
+        {
+            cout << "Libro no encontrado.\n";
+        }
+    }
+    else
+    {
+        cout << "No se pudo abrir el archivo de libros.\n";
     }
 }
