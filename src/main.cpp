@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
 
 using namespace std;
 
@@ -28,11 +29,14 @@ void guardarUsuarios(Usuario *usuarios, int numUsuarios);
 void agregarLibro(Libro *&libros, int &numLibros);
 void eliminarLibro(Libro *&libros, int &numLibros, const string &titulo);
 void mostrarLibros(Libro *libros, int numLibros);
+void modificarLibro(Libro *libros, int numLibros, const string &titulo);
 
 bool iniciarSesion(Usuario *usuarios, int numUsuarios, string &username, string &userType);
 void menuAdministrador(Libro *&libros, int &numLibros);
 void menuEmpleado(Libro *&libros, int &numLibros);
 void menuCliente(Libro *&libros, int numLibros, const string &username);
+
+void registrarError(const string &mensaje);
 
 int main()
 {
@@ -40,32 +44,60 @@ int main()
 
     // Cargar datos en arreglos dinámicos
     int numLibros = 0, numUsuarios = 0;
-    Libro *libros = cargarLibros(numLibros);
-    Usuario *usuarios = cargarUsuarios(numUsuarios);
+    Libro *libros = nullptr;
+    Usuario *usuarios = nullptr;
 
-    // Iniciar sesión
-    if (!iniciarSesion(usuarios, numUsuarios, username, userType))
+    try
     {
-        cout << "Error de inicio de sesión.\n";
+        libros = cargarLibros(numLibros);
+        usuarios = cargarUsuarios(numUsuarios);
+    }
+    catch (const exception &e)
+    {
+        registrarError("Error al cargar datos: " + string(e.what()));
         return 1;
     }
 
-    if (userType == "administrador")
+    // Iniciar sesión
+    try
     {
-        menuAdministrador(libros, numLibros);
+        if (!iniciarSesion(usuarios, numUsuarios, username, userType))
+        {
+            registrarError("Error de inicio de sesión para el usuario: " + username);
+            cout << "Error de inicio de sesión.\n";
+            return 1;
+        }
+
+        if (userType == "administrador")
+        {
+            menuAdministrador(libros, numLibros);
+        }
+        else if (userType == "empleado")
+        {
+            menuEmpleado(libros, numLibros);
+        }
+        else if (userType == "cliente")
+        {
+            menuCliente(libros, numLibros, username);
+        }
     }
-    else if (userType == "empleado")
+    catch (const exception &e)
     {
-        menuEmpleado(libros, numLibros);
-    }
-    else if (userType == "cliente")
-    {
-        menuCliente(libros, numLibros, username);
+        registrarError("Error en el menú de usuario: " + string(e.what()));
+        cout << "Error en el menú de usuario.\n";
     }
 
     // Guardar datos en archivos antes de salir
-    guardarLibros(libros, numLibros);
-    guardarUsuarios(usuarios, numUsuarios);
+    try
+    {
+        guardarLibros(libros, numLibros);
+        guardarUsuarios(usuarios, numUsuarios);
+    }
+    catch (const exception &e)
+    {
+        registrarError("Error al guardar datos: " + string(e.what()));
+        cout << "Error al guardar datos.\n";
+    }
 
     // Liberar memoria
     delete[] libros;
@@ -79,8 +111,8 @@ Libro *cargarLibros(int &numLibros)
     ifstream librosFile("libros.csv");
     if (!librosFile.is_open())
     {
-        cout << "No se pudo abrir el archivo de libros.\n";
-        return nullptr;
+        registrarError("No se pudo abrir el archivo de libros.");
+        throw runtime_error("No se pudo abrir el archivo de libros.");
     }
 
     // Contar el número de libros
@@ -119,8 +151,8 @@ Usuario *cargarUsuarios(int &numUsuarios)
     ifstream usersFile("users.csv");
     if (!usersFile.is_open())
     {
-        cout << "No se pudo abrir el archivo de usuarios.\n";
-        return nullptr;
+        registrarError("No se pudo abrir el archivo de usuarios.");
+        throw runtime_error("No se pudo abrir el archivo de usuarios.");
     }
 
     // Contar el número de usuarios
@@ -159,8 +191,8 @@ void guardarLibros(Libro *libros, int numLibros)
     ofstream librosFile("libros.csv");
     if (!librosFile.is_open())
     {
-        cout << "No se pudo abrir el archivo de libros.\n";
-        return;
+        registrarError("No se pudo abrir el archivo de libros para escritura.");
+        throw runtime_error("No se pudo abrir el archivo de libros para escritura.");
     }
 
     for (int i = 0; i < numLibros; i++)
@@ -176,8 +208,8 @@ void guardarUsuarios(Usuario *usuarios, int numUsuarios)
     ofstream usersFile("users.csv");
     if (!usersFile.is_open())
     {
-        cout << "No se pudo abrir el archivo de usuarios.\n";
-        return;
+        registrarError("No se pudo abrir el archivo de usuarios para escritura.");
+        throw runtime_error("No se pudo abrir el archivo de usuarios para escritura.");
     }
 
     for (int i = 0; i < numUsuarios; i++)
@@ -199,19 +231,27 @@ void agregarLibro(Libro *&libros, int &numLibros)
     nuevoLibro.estado = "disponible";
     nuevoLibro.compradoPor = "none";
 
-    // Crear un nuevo arreglo dinámico con un libro más
-    Libro *temp = new Libro[numLibros + 1];
-    for (int i = 0; i < numLibros; i++)
+    try
     {
-        temp[i] = libros[i];
+        // Crear un nuevo arreglo dinámico con un libro más
+        Libro *temp = new Libro[numLibros + 1];
+        for (int i = 0; i < numLibros; i++)
+        {
+            temp[i] = libros[i];
+        }
+        temp[numLibros] = nuevoLibro;
+        numLibros++;
+
+        delete[] libros;
+        libros = temp;
+
+        cout << "Libro agregado exitosamente.\n";
     }
-    temp[numLibros] = nuevoLibro;
-    numLibros++;
-
-    delete[] libros;
-    libros = temp;
-
-    cout << "Libro agregado exitosamente.\n";
+    catch (const exception &e)
+    {
+        registrarError("Error al agregar libro: " + string(e.what()));
+        cout << "Error al agregar libro.\n";
+    }
 }
 
 void eliminarLibro(Libro *&libros, int &numLibros, const string &titulo)
@@ -227,25 +267,34 @@ void eliminarLibro(Libro *&libros, int &numLibros, const string &titulo)
     }
     if (index == -1)
     {
+        registrarError("Error al eliminar libro: Libro no encontrado (" + titulo + ")");
         cout << "Libro no encontrado.\n";
         return;
     }
 
-    // Crear un nuevo arreglo dinámico con un libro menos
-    Libro *temp = new Libro[numLibros - 1];
-    for (int i = 0, j = 0; i < numLibros; i++)
+    try
     {
-        if (i != index)
+        // Crear un nuevo arreglo dinámico con un libro menos
+        Libro *temp = new Libro[numLibros - 1];
+        for (int i = 0, j = 0; i < numLibros; i++)
         {
-            temp[j++] = libros[i];
+            if (i != index)
+            {
+                temp[j++] = libros[i];
+            }
         }
+        numLibros--;
+
+        delete[] libros;
+        libros = temp;
+
+        cout << "Libro eliminado exitosamente.\n";
     }
-    numLibros--;
-
-    delete[] libros;
-    libros = temp;
-
-    cout << "Libro eliminado exitosamente.\n";
+    catch (const exception &e)
+    {
+        registrarError("Error al eliminar libro: " + string(e.what()));
+        cout << "Error al eliminar libro.\n";
+    }
 }
 
 void mostrarLibros(Libro *libros, int numLibros)
@@ -253,23 +302,72 @@ void mostrarLibros(Libro *libros, int numLibros)
     cout << "Lista de libros:\n";
     for (int i = 0; i < numLibros; i++)
     {
-        cout << "Titulo: " << libros[i].titulo << ", Autor: " << libros[i].autor << ", Estado: " << libros[i].estado << ", Comprado Por: " << libros[i].compradoPor << "\n";
+        cout << "Titulo: " << libros[i].titulo << ", Autor: " << libros[i].autor << ", Estado: " << libros[i].estado << ", Comprado por: " << libros[i].compradoPor << "\n";
     }
+}
+
+void modificarLibro(Libro *libros, int numLibros, const string &titulo)
+{
+    int index = -1;
+    for (int i = 0; i < numLibros; i++)
+    {
+        if (libros[i].titulo == titulo)
+        {
+            index = i;
+            break;
+        }
+    }
+    if (index == -1)
+    {
+        registrarError("Error al modificar libro: Libro no encontrado (" + titulo + ")");
+        cout << "Libro no encontrado.\n";
+        return;
+    }
+
+    int opcion;
+    cout << "Qué desea modificar?\n";
+    cout << "1. Título\n";
+    cout << "2. Autor\n";
+    cout << "3. Estado\n";
+    cout << "Ingrese una opción: ";
+    cin >> opcion;
+
+    switch (opcion)
+    {
+    case 1:
+        cout << "Ingrese el nuevo título: ";
+        cin.ignore();
+        getline(cin, libros[index].titulo);
+        break;
+    case 2:
+        cout << "Ingrese el nuevo autor: ";
+        cin.ignore();
+        getline(cin, libros[index].autor);
+        break;
+    case 3:
+        cout << "Ingrese el nuevo estado (disponible/rented): ";
+        cin.ignore();
+        getline(cin, libros[index].estado);
+        break;
+    default:
+        cout << "Opción inválida.\n";
+        return;
+    }
+    cout << "Libro modificado exitosamente.\n";
 }
 
 bool iniciarSesion(Usuario *usuarios, int numUsuarios, string &username, string &userType)
 {
-    string user, pass;
     cout << "Ingrese su nombre de usuario: ";
-    cin >> user;
+    cin >> username;
     cout << "Ingrese su contraseña: ";
-    cin >> pass;
+    string password;
+    cin >> password;
 
     for (int i = 0; i < numUsuarios; i++)
     {
-        if (usuarios[i].username == user && usuarios[i].password == pass)
+        if (usuarios[i].username == username && usuarios[i].password == password)
         {
-            username = user;
             userType = usuarios[i].type;
             return true;
         }
@@ -284,9 +382,10 @@ void menuAdministrador(Libro *&libros, int &numLibros)
     {
         cout << "Menu Administrador:\n";
         cout << "1. Agregar libro\n";
-        cout << "2. Eliminar libro\n";
-        cout << "3. Mostrar libros\n";
-        cout << "4. Salir\n";
+        cout << "2. Modificar libro\n";
+        cout << "3. Eliminar libro\n";
+        cout << "4. Mostrar libros\n";
+        cout << "5. Salir\n";
         cout << "Ingrese una opción: ";
         cin >> opcion;
         switch (opcion)
@@ -297,23 +396,32 @@ void menuAdministrador(Libro *&libros, int &numLibros)
         case 2:
         {
             string titulo;
+            cout << "Ingrese el titulo del libro a modificar: ";
+            cin.ignore();
+            getline(cin, titulo);
+            modificarLibro(libros, numLibros, titulo);
+        }
+        break;
+        case 3:
+        {
+            string titulo;
             cout << "Ingrese el titulo del libro a eliminar: ";
             cin.ignore();
             getline(cin, titulo);
             eliminarLibro(libros, numLibros, titulo);
         }
         break;
-        case 3:
+        case 4:
             mostrarLibros(libros, numLibros);
             break;
-        case 4:
+        case 5:
             cout << "Saliendo...\n";
             break;
         default:
             cout << "Opción inválida.\n";
             break;
         }
-    } while (opcion != 4);
+    } while (opcion != 5);
 }
 
 void menuEmpleado(Libro *&libros, int &numLibros)
@@ -362,7 +470,9 @@ void menuCliente(Libro *&libros, int numLibros, const string &username)
     {
         cout << "Menu Cliente:\n";
         cout << "1. Mostrar libros\n";
-        cout << "2. Salir\n";
+        cout << "2. Rentar libro\n";
+        cout << "3. Devolver libro\n";
+        cout << "4. Salir\n";
         cout << "Ingrese una opción: ";
         cin >> opcion;
         switch (opcion)
@@ -371,11 +481,81 @@ void menuCliente(Libro *&libros, int numLibros, const string &username)
             mostrarLibros(libros, numLibros);
             break;
         case 2:
+        {
+            string titulo;
+            cout << "Ingrese el titulo del libro que desea rentar: ";
+            cin.ignore();
+            getline(cin, titulo);
+            bool encontrado = false;
+            for (int i = 0; i < numLibros; i++)
+            {
+                if (libros[i].titulo == titulo && libros[i].estado == "disponible")
+                {
+                    libros[i].estado = "rented";
+                    libros[i].compradoPor = username;
+                    encontrado = true;
+                    cout << "Libro rentado exitosamente.\n";
+                    break;
+                }
+            }
+            if (!encontrado)
+            {
+                cout << "Libro no disponible o no encontrado.\n";
+            }
+        }
+        break;
+        case 3:
+        {
+            string titulo;
+            cout << "Ingrese el titulo del libro que desea devolver: ";
+            cin.ignore();
+            getline(cin, titulo);
+            bool encontrado = false;
+            for (int i = 0; i < numLibros; i++)
+            {
+                if (libros[i].titulo == titulo && libros[i].compradoPor == username)
+                {
+                    libros[i].estado = "disponible";
+                    libros[i].compradoPor = "none";
+                    encontrado = true;
+                    cout << "Libro devuelto exitosamente.\n";
+                    break;
+                }
+            }
+            if (!encontrado)
+            {
+                cout << "Libro no encontrado o no rentado por usted.\n";
+            }
+        }
+        break;
+        case 4:
             cout << "Saliendo...\n";
             break;
         default:
             cout << "Opción inválida.\n";
             break;
         }
-    } while (opcion != 2);
+    } while (opcion != 4);
+}
+
+void registrarError(const string &mensaje)
+{
+    ofstream logFile("error.log", ios::app);
+    if (logFile.is_open())
+    {
+        time_t now = time(0);
+        tm *ltm = localtime(&now);
+        logFile << 1900 + ltm->tm_year << "-"
+                << 1 + ltm->tm_mon << "-"
+                << ltm->tm_mday << " "
+                << ltm->tm_hour << ":"
+                << ltm->tm_min << ":"
+                << ltm->tm_sec << " - "
+                << mensaje << "\n";
+        logFile.close();
+    }
+    else
+    {
+        cerr << "No se pudo abrir el archivo de log.\n";
+    }
 }
