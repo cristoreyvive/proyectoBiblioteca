@@ -1,0 +1,196 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cctype>
+#include <algorithm>
+#include <climits>
+using namespace std;
+
+class Publicacion {
+protected:
+    string titulo;
+    string autor;
+    int anioPublicacion;
+
+public:
+    Publicacion(string tit, string aut, int anio) 
+        : titulo(tit), autor(aut), anioPublicacion(anio) {}
+
+    virtual ~Publicacion() {}
+
+    string getTitulo() const { return titulo; }
+    string getAutor() const { return autor; }
+    int getAnioPublicacion() const { return anioPublicacion; }
+
+    virtual void mostrarInfo() const {
+        cout << "Titulo: " << titulo << endl;
+        cout << "Autor: " << autor << endl;
+        cout << "AÃ±o de Publicacion: " << anioPublicacion << endl;
+    }
+
+    virtual string getTipo() const = 0;
+};
+
+class Libro : public Publicacion {
+private:
+    int numPaginas;
+
+public:
+    Libro(string tit, string aut, int anio, int pag) 
+        : Publicacion(tit, aut, anio), numPaginas(pag) {}
+
+    void mostrarInfo() const override {
+        Publicacion::mostrarInfo();
+        cout << "Numero de Paginas: " << numPaginas << endl;
+        cout << "Tipo: " << getTipo() << endl;
+    }
+
+    string getTipo() const override { return "Libro"; }
+};
+
+class Revista : public Publicacion {
+private:
+    int numeroEdicion;
+
+public:
+    Revista(string tit, string aut, int anio, int edicion) 
+        : Publicacion(tit, aut, anio), numeroEdicion(edicion) {}
+
+    void mostrarInfo() const override {
+        Publicacion::mostrarInfo();
+        cout << "Numero de Edicion: " << numeroEdicion << endl;
+        cout << "Tipo: " << getTipo() << endl;
+    }
+
+    string getTipo() const override { return "Revista"; }
+};
+
+class Periodico : public Publicacion {
+private:
+    string fechaPublicacion;
+    string ciudad;
+
+public:
+    Periodico(string tit, string aut, int anio, string fecha, string ciu) 
+        : Publicacion(tit, aut, anio), fechaPublicacion(fecha), ciudad(ciu) {}
+
+    void mostrarInfo() const override {
+        Publicacion::mostrarInfo();
+        cout << "Fecha de Publicacion: " << fechaPublicacion << endl;
+        cout << "Ciudad: " << ciudad << endl;
+        cout << "Tipo: " << getTipo() << endl;
+    }
+
+    string getTipo() const override { return "Periodico"; }
+};
+
+string toLowerCase(const string& str) {
+    string result = str;
+    transform(result.begin(), result.end(), result.begin(), 
+              [](unsigned char c){ return tolower(c); });
+    return result;
+}
+
+bool validarAnio(int anio) {
+    return (anio >= 1500 && anio <= 2025);
+}
+
+bool validarPositivo(int num) {
+    return num > 0;
+}
+
+void mostrarMenuPrincipal() {
+    cout << "\n==== SISTEMA DE GESTION DE BIBLIOTECA ===="
+         << "\n1. Agregar nueva publicacion"
+         << "\n2. Mostrar todas las publicaciones"
+         << "\n3. Buscar publicacion por titulo"
+         << "\n4. Eliminar publicacion"
+         << "\n5. Mostrar estadisticas"
+         << "\n6. Salir del programa"
+         << "\nSeleccione una opcion: ";
+}
+
+void mostrarSubmenuTipos() {
+    cout << "\n==== TIPOS DE PUBLICACION ===="
+         << "\n1. Libro"
+         << "\n2. Revista"
+         << "\n3. Periodico"
+         << "\n4. Volver al menu principal"
+         << "\nSeleccione el tipo: ";
+}
+
+int main() {
+    vector<Publicacion*> catalogo;
+    int opcion;
+
+    do {
+        mostrarMenuPrincipal();
+        cin >> opcion;
+        cin.ignore();
+
+        switch (opcion) {
+            case 1: { 
+                int tipo;
+                string titulo, autor, fecha, ciudad;
+                int anio, paginas, edicion;
+                
+                do {
+                    mostrarSubmenuTipos();
+                    cin >> tipo;
+                    cin.ignore();
+                    
+                    if (tipo == 4) break; 
+            
+                    do {
+                        cout << "\nIngrese el titulo: ";
+                        getline(cin, titulo);
+                    } while (titulo.empty());
+                    
+                    do {
+                        cout << "Ingrese el autor: ";
+                        getline(cin, autor);
+                    } while (autor.empty());
+                    
+                    do {
+                        cout << "Ingrese el aÃ±o de publicacion (1500-2025): ";
+                        cin >> anio;
+                    } while (!validarAnio(anio));
+                    cin.ignore();
+    
+                    switch (tipo) {
+                        case 1: 
+                            do {
+                                cout << "Ingrese el numero de paginas: ";
+                                cin >> paginas;
+                            } while (!validarPositivo(paginas));
+                            catalogo.push_back(new Libro(titulo, autor, anio, paginas));
+                            break;
+                            
+                        case 2: 
+                            do {
+                                cout << "Ingrese el numero de edicion: ";
+                                cin >> edicion;
+                            } while (!validarPositivo(edicion));
+                            catalogo.push_back(new Revista(titulo, autor, anio, edicion));
+                            break;
+                            
+                        case 3: 
+                            do {
+                                cout << "Ingrese fecha de publicacion (DD/MM/AAAA): ";
+                                getline(cin, fecha);
+                            } while (fecha.empty());
+                            
+                            do {
+                                cout << "Ingrese la ciudad: ";
+                                getline(cin, ciudad);
+                            } while (ciudad.empty());
+                            
+                            catalogo.push_back(new Periodico(titulo, autor, anio, fecha, ciudad));
+                            break;
+                            
+                        default:
+                            cout << "Opcion no valida. Intente de nuevo.\n";
+                    }
+                } while (tipo < 1 || tipo > 4);
+                break;
+            }
