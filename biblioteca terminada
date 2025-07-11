@@ -1,0 +1,331 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cctype>
+#include <algorithm>
+#include <climits>
+using namespace std;
+
+class Publicacion {
+protected:
+    string titulo;
+    string autor;
+    int anioPublicacion;
+
+public:
+    Publicacion(string tit, string aut, int anio) 
+        : titulo(tit), autor(aut), anioPublicacion(anio) {}
+
+    virtual ~Publicacion() {}
+
+    string getTitulo() const { return titulo; }
+    string getAutor() const { return autor; }
+    int getAnioPublicacion() const { return anioPublicacion; }
+
+    virtual void mostrarInfo() const {
+        cout << "Titulo: " << titulo << endl;
+        cout << "Autor: " << autor << endl;
+        cout << "AÃ±o de Publicacion: " << anioPublicacion << endl;
+    }
+
+    virtual string getTipo() const = 0;
+};
+
+class Libro : public Publicacion {
+private:
+    int numPaginas;
+
+public:
+    Libro(string tit, string aut, int anio, int pag) 
+        : Publicacion(tit, aut, anio), numPaginas(pag) {}
+
+    void mostrarInfo() const override {
+        Publicacion::mostrarInfo();
+        cout << "Numero de Paginas: " << numPaginas << endl;
+        cout << "Tipo: " << getTipo() << endl;
+    }
+
+    string getTipo() const override { return "Libro"; }
+};
+
+class Revista : public Publicacion {
+private:
+    int numeroEdicion;
+
+public:
+    Revista(string tit, string aut, int anio, int edicion) 
+        : Publicacion(tit, aut, anio), numeroEdicion(edicion) {}
+
+    void mostrarInfo() const override {
+        Publicacion::mostrarInfo();
+        cout << "Numero de Edicion: " << numeroEdicion << endl;
+        cout << "Tipo: " << getTipo() << endl;
+    }
+
+    string getTipo() const override { return "Revista"; }
+};
+
+class Periodico : public Publicacion {
+private:
+    string fechaPublicacion;
+    string ciudad;
+
+public:
+    Periodico(string tit, string aut, int anio, string fecha, string ciu) 
+        : Publicacion(tit, aut, anio), fechaPublicacion(fecha), ciudad(ciu) {}
+
+    void mostrarInfo() const override {
+        Publicacion::mostrarInfo();
+        cout << "Fecha de Publicacion: " << fechaPublicacion << endl;
+        cout << "Ciudad: " << ciudad << endl;
+        cout << "Tipo: " << getTipo() << endl;
+    }
+
+    string getTipo() const override { return "Periodico"; }
+};
+
+string toLowerCase(const string& str) {
+    string result = str;
+    transform(result.begin(), result.end(), result.begin(), 
+              [](unsigned char c){ return tolower(c); });
+    return result;
+}
+
+bool validarAnio(int anio) {
+    return (anio >= 1500 && anio <= 2025);
+}
+
+bool validarPositivo(int num) {
+    return num > 0;
+}
+
+void mostrarMenuPrincipal() {
+    cout << "\n==== SISTEMA DE GESTION DE BIBLIOTECA ===="
+         << "\n1. Agregar nueva publicacion"
+         << "\n2. Mostrar todas las publicaciones"
+         << "\n3. Buscar publicacion por titulo"
+         << "\n4. Eliminar publicacion"
+         << "\n5. Mostrar estadisticas"
+         << "\n6. Salir del programa"
+         << "\nSeleccione una opcion: ";
+}
+
+void mostrarSubmenuTipos() {
+    cout << "\n==== TIPOS DE PUBLICACION ===="
+         << "\n1. Libro"
+         << "\n2. Revista"
+         << "\n3. Periodico"
+         << "\n4. Volver al menu principal"
+         << "\nSeleccione el tipo: ";
+}
+
+int main() {
+    vector<Publicacion*> catalogo;
+    int opcion;
+
+    do {
+        mostrarMenuPrincipal();
+        cin >> opcion;
+        cin.ignore();
+
+        switch (opcion) {
+            case 1: { 
+                int tipo;
+                string titulo, autor, fecha, ciudad;
+                int anio, paginas, edicion;
+                
+                do {
+                    mostrarSubmenuTipos();
+                    cin >> tipo;
+                    cin.ignore();
+                    
+                    if (tipo == 4) break; 
+            
+                    do {
+                        cout << "\nIngrese el titulo: ";
+                        getline(cin, titulo);
+                    } while (titulo.empty());
+                    
+                    do {
+                        cout << "Ingrese el autor: ";
+                        getline(cin, autor);
+                    } while (autor.empty());
+                    
+                    do {
+                        cout << "Ingrese el aÃ±o de publicacion (1500-2025): ";
+                        cin >> anio;
+                    } while (!validarAnio(anio));
+                    cin.ignore();
+    
+                    switch (tipo) {
+                        case 1: 
+                            do {
+                                cout << "Ingrese el numero de paginas: ";
+                                cin >> paginas;
+                            } while (!validarPositivo(paginas));
+                            catalogo.push_back(new Libro(titulo, autor, anio, paginas));
+                            break;
+                            
+                        case 2: 
+                            do {
+                                cout << "Ingrese el numero de edicion: ";
+                                cin >> edicion;
+                            } while (!validarPositivo(edicion));
+                            catalogo.push_back(new Revista(titulo, autor, anio, edicion));
+                            break;
+                            
+                        case 3: 
+                            do {
+                                cout << "Ingrese fecha de publicacion (DD/MM/AAAA): ";
+                                getline(cin, fecha);
+                            } while (fecha.empty());
+                            
+                            do {
+                                cout << "Ingrese la ciudad: ";
+                                getline(cin, ciudad);
+                            } while (ciudad.empty());
+                            
+                            catalogo.push_back(new Periodico(titulo, autor, anio, fecha, ciudad));
+                            break;
+                            
+                        default:
+                            cout << "Opcion no valida. Intente de nuevo.\n";
+                    }
+                } while (tipo < 1 || tipo > 4);
+                break;
+            }
+            
+            case 2: {
+                if (catalogo.empty()) {
+                    cout << "\nNo hay publicaciones registradas.\n";
+                } else {
+                    cout << "\n=== CATALOGO COMPLETO (" << catalogo.size() << " publicaciones) ===\n";
+                    for (size_t i = 0; i < catalogo.size(); ++i) {
+                        cout << "\nPublicacion #" << i + 1 << ":\n";
+                        catalogo[i]->mostrarInfo();
+                        cout << "-----------------------------------";
+                    }
+                }
+                break;
+            }
+            
+            case 3: { 
+                if (catalogo.empty()) {
+                    cout << "\nNo hay publicaciones registradas.\n";
+                    break;
+                }
+                
+                string busqueda;
+                cout << "\nIngrese titulo a buscar: ";
+                getline(cin, busqueda);
+                string busquedaLower = toLowerCase(busqueda);
+                
+                bool encontrado = false;
+                cout << "\n=== RESULTADOS DE BUSQUEDA ===\n";
+                for (size_t i = 0; i < catalogo.size(); ++i) {
+                    string tituloLower = toLowerCase(catalogo[i]->getTitulo());
+                    if (tituloLower.find(busquedaLower) != string::npos) {
+                        cout << "\nPublicacion #" << i + 1 << ":\n";
+                        catalogo[i]->mostrarInfo();
+                        encontrado = true;
+                        cout << "-----------------------------------";
+                    }
+                }
+                
+                if (!encontrado) {
+                    cout << "No se encontraron publicaciones con ese titulo.\n";
+                }
+                break;
+            }
+            
+            case 4: { 
+                if (catalogo.empty()) {
+                    cout << "\nNo hay publicaciones registradas.\n";
+                    break;
+                }
+
+                cout << "\n=== SELECCIONE PUBLICACION A ELIMINAR ===\n";
+                for (size_t i = 0; i < catalogo.size(); ++i) {
+                    cout << i + 1 << ". " << catalogo[i]->getTitulo()
+                         << " (" << catalogo[i]->getTipo() << ")\n";
+                }
+                
+                int indice;
+                cout << "\nIngrese el numero de publicacion a eliminar (0 para cancelar): ";
+                cin >> indice;
+                
+                if (indice == 0) break;
+                
+                if (indice > 0 && static_cast<size_t>(indice) <= catalogo.size()) {
+                    char confirmar;
+                    cout << "Â¿Eliminar '" << catalogo[indice-1]->getTitulo() << "'? (s/n): ";
+                    cin >> confirmar;
+                    
+                    if (tolower(confirmar) == 's') {
+                        delete catalogo[indice-1];
+                        catalogo.erase(catalogo.begin() + indice - 1);
+                        cout << "Publicacion eliminada exitosamente!\n";
+                    } else {
+                        cout << "Eliminacion cancelada.\n";
+                    }
+                } else {
+                    cout << "Indice no valido.\n";
+                }
+                break;
+            }
+            
+            case 5: { 
+                if (catalogo.empty()) {
+                    cout << "\nNo hay publicaciones registradas.\n";
+                    break;
+                }
+                
+                int libros = 0, revistas = 0, periodicos = 0;
+                int anioMasAntiguo = INT_MAX;
+                int anioMasReciente = INT_MIN;
+                string tituloAntiguo, tituloReciente;
+                
+                for (const auto& pub : catalogo) {
+                    string tipo = pub->getTipo();
+                    if (tipo == "Libro") libros++;
+                    else if (tipo == "Revista") revistas++;
+                    else if (tipo == "Periodico") periodicos++;
+                
+                    if (pub->getAnioPublicacion() < anioMasAntiguo) {
+                        anioMasAntiguo = pub->getAnioPublicacion();
+                        tituloAntiguo = pub->getTitulo();
+                    }
+                    
+                    if (pub->getAnioPublicacion() > anioMasReciente) {
+                        anioMasReciente = pub->getAnioPublicacion();
+                        tituloReciente = pub->getTitulo();
+                    }
+                }
+                
+                cout << "\n=== ESTADISTICAS ===\n";
+                cout << "Total de publicaciones: " << catalogo.size() << "\n";
+                cout << "Libros: " << libros << "\n";
+                cout << "Revistas: " << revistas << "\n";
+                cout << "Periodicos: " << periodicos << "\n";
+                cout << "Publicacion mas antigua: '" << tituloAntiguo 
+                     << "' (" << anioMasAntiguo << ")\n";
+                cout << "Publicacion mas reciente: '" << tituloReciente 
+                     << "' (" << anioMasReciente << ")\n";
+                break;
+            }
+            
+            case 6: 
+                for (auto& pub : catalogo) {
+                    delete pub;
+                }
+                catalogo.clear();
+                cout << "\nSaliendo del programa...\n";
+                break;
+                
+            default:
+                cout << "Opcion no valida. Intente de nuevo.\n";
+        }
+    } while (opcion != 6);
+
+    return 0;
+}
