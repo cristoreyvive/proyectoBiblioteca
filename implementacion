@@ -1,0 +1,216 @@
+#include "Matriz.hpp"
+
+namespace MatrizLib {
+
+// Constructor por defecto
+Matriz::Matriz() : datos(nullptr), filas(0), columnas(0) {}
+
+// Constructor parametrizado
+Matriz::Matriz(int f, int c) : filas(f), columnas(c) {
+    if (f <= 0 || c <= 0) {
+        throw std::invalid_argument("Dimensiones de matriz invalidas");
+    }
+    
+    datos = new double*[f];
+    for (int i = 0; i < f; ++i) {
+        datos[i] = new double[c]();
+    }
+}
+
+// Constructor de copia
+Matriz::Matriz(const Matriz& otra) : filas(otra.filas), columnas(otra.columnas) {
+    datos = new double*[filas];
+    for (int i = 0; i < filas; ++i) {
+        datos[i] = new double[columnas];
+        for (int j = 0; j < columnas; ++j) {
+            datos[i][j] = otra.datos[i][j];
+        }
+    }
+}
+
+// Destructor
+Matriz::~Matriz() {
+    for (int i = 0; i < filas; ++i) {
+        delete[] datos[i];
+    }
+    delete[] datos;
+}
+
+// Llenar matriz desde entrada de usuario
+void Matriz::llenarMatriz() {
+    if (filas == 0 || columnas == 0) return;
+    
+    std::cout << "Ingrese " << filas * columnas << " elementos:" << std::endl;
+    for (int i = 0; i < filas; ++i) {
+        for (int j = 0; j < columnas; ++j) {
+            while (!(std::cin >> datos[i][j])) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cout << "Entrada invalida. Ingrese un numero: ";
+            }
+        }
+    }
+}
+
+// Mostrar matriz formateada
+void Matriz::mostrarMatriz() const {
+    if (filas == 0 || columnas == 0) {
+        std::cout << "Matriz vacia" << std::endl;
+        return;
+    }
+    
+    for (int i = 0; i < filas; ++i) {
+        for (int j = 0; j < columnas; ++j) {
+            std::cout << std::setw(10) << std::fixed << std::setprecision(4) << datos[i][j];
+        }
+        std::cout << std::endl;
+    }
+}
+
+// Calcular matriz transpuesta
+Matriz Matriz::transpuesta() const {
+    Matriz result(columnas, filas);
+    for (int i = 0; i < filas; ++i) {
+        for (int j = 0; j < columnas; ++j) {
+            result.datos[j][i] = datos[i][j];
+        }
+    }
+    return result;
+}
+
+// FunciÃ³n auxiliar recursiva para determinante
+double Matriz::calcularDeterminante(double** matriz, int n) {
+    if (n == 1) return matriz[0][0];
+    if (n == 2) return matriz[0][0] * matriz[1][1] - matriz[0][1] * matriz[1][0];
+    
+    double det = 0;
+    double** submatriz = new double*[n-1];
+    for (int i = 0; i < n-1; ++i) {
+        submatriz[i] = new double[n-1];
+    }
+    
+    for (int k = 0; k < n; ++k) {
+        int subi = 0;
+        for (int i = 1; i < n; ++i) {
+            int subj = 0;
+            for (int j = 0; j < n; ++j) {
+                if (j == k) continue;
+                submatriz[subi][subj] = matriz[i][j];
+                subj++;
+            }
+            subi++;
+        }
+        double sign = (k % 2 == 0) ? 1 : -1;
+        det += sign * matriz[0][k] * calcularDeterminante(submatriz, n-1);
+    }
+    
+    for (int i = 0; i < n-1; ++i) {
+        delete[] submatriz[i];
+    }
+    delete[] submatriz;
+    
+    return det;
+}
+
+// Calcular determinante principal
+double Matriz::determinante() {
+    if (filas != columnas) {
+        throw std::logic_error("La matriz debe ser cuadrada");
+    }
+    return calcularDeterminante(datos, filas);
+}
+
+// Suma de matrices
+Matriz Matriz::suma(const Matriz& otra) const {
+    if (filas != otra.filas || columnas != otra.columnas) {
+        throw std::invalid_argument("Dimensiones incompatibles para suma");
+    }
+    
+    Matriz result(filas, columnas);
+    for (int i = 0; i < filas; ++i) {
+        for (int j = 0; j < columnas; ++j) {
+            result.datos[i][j] = datos[i][j] + otra.datos[i][j];
+        }
+    }
+    return result;
+}
+
+// MultiplicaciÃ³n de matrices
+Matriz Matriz::multiplicacion(const Matriz& otra) const {
+    if (columnas != otra.filas) {
+        throw std::invalid_argument("Dimensiones incompatibles para multiplicacion");
+    }
+    
+    Matriz result(filas, otra.columnas);
+    for (int i = 0; i < filas; ++i) {
+        for (int j = 0; j < otra.columnas; ++j) {
+            for (int k = 0; k < columnas; ++k) {
+                result.datos[i][j] += datos[i][k] * otra.datos[k][j];
+            }
+        }
+    }
+    return result;
+}
+
+// ComparaciÃ³n de matrices
+bool Matriz::esIgual(const Matriz& otra) const {
+    if (filas != otra.filas || columnas != otra.columnas) return false;
+    
+    for (int i = 0; i < filas; ++i) {
+        for (int j = 0; j < columnas; ++j) {
+            if (std::fabs(datos[i][j] - otra.datos[i][j]) > 1e-9) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// AÃ±adir nueva fila
+void Matriz::aÃ±adirFila() {
+    double** nuevosDatos = new double*[filas + 1];
+    
+    // Copiar filas existentes
+    for (int i = 0; i < filas; ++i) {
+        nuevosDatos[i] = datos[i];
+    }
+    
+    // Crear nueva fila
+    nuevosDatos[filas] = new double[columnas]();
+    
+    // Actualizar datos
+    delete[] datos;
+    datos = nuevosDatos;
+    filas++;
+}
+
+// AÃ±adir nueva columna
+void Matriz::aÃ±adirColumna() {
+    for (int i = 0; i < filas; ++i) {
+        double* nuevaFila = new double[columnas + 1];
+        
+        // Copiar elementos existentes
+        for (int j = 0; j < columnas; ++j) {
+            nuevaFila[j] = datos[i][j];
+        }
+        
+        // AÃ±adir nueva columna
+        nuevaFila[columnas] = 0.0;
+        
+        // Reemplazar fila
+        delete[] datos[i];
+        datos[i] = nuevaFila;
+    }
+    columnas++;
+}
+
+// Getters
+int Matriz::getFilas() const { return filas; }
+int Matriz::getColumnas() const { return columnas; }
+
+// FunciÃ³n factory del namespace
+Matriz crearMatriz(int filas, int columnas) {
+    return Matriz(filas, columnas);
+}
+
+} // namespace MatrizLib
