@@ -1,0 +1,50 @@
+#ifndef MATRIZ_HPP
+#define MATRIZ_HPP
+
+#include <iostream>
+#include <stdexcept>
+#include <cmath>
+#include <iomanip>
+
+namespace MatrizLib {
+
+class Matriz {
+private:
+    double** datos;
+    int filas;
+    int columnas;
+    
+    // FunciÃ³n auxiliar para cÃ¡lculo de determinante
+    double calcularDeterminante(double** matriz, int n);
+
+public:
+    // Constructores y destructor
+    Matriz();
+    Matriz(int f, int c);
+    Matriz(const Matriz& otra);
+    ~Matriz();
+    
+    // MÃ©todos obligatorios
+    void llenarMatriz();
+    void mostrarMatriz() const;
+    Matriz transpuesta() const;
+    double determinante();
+    Matriz suma(const Matriz& otra) const;
+    Matriz multiplicacion(const Matriz& otra) const;
+    bool esIgual(const Matriz& otra) const;
+    
+    // MÃ©todos adicionales para manipulaciÃ³n
+    void aÃ±adirFila();
+    void aÃ±adirColumna();
+    
+    // Getters
+    int getFilas() const;
+    int getColumnas() const;
+};
+
+// Funciones del namespace
+Matriz crearMatriz(int filas, int columnas);
+
+} // namespace MatrizLib
+
+#endif
