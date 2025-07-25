@@ -1,0 +1,73 @@
+#include "Matriz.hpp"
+#include <iostream>
+
+using namespace MatrizLib;
+
+void mostrarResultado(const char* descripcion, const Matriz& m) {
+    std::cout << "\n" << descripcion << ":\n";
+    m.mostrarMatriz();
+}
+
+int main() {
+    try {
+        // CreaciÃ³n de matrices
+        Matriz A = crearMatriz(2, 2);
+        std::cout << "=== Llenar matriz A (2x2) ===";
+        A.llenarMatriz();
+        mostrarResultado("Matriz A", A);
+        
+        Matriz B = crearMatriz(2, 2);
+        std::cout << "\n=== Llenar matriz B (2x2) ===";
+        B.llenarMatriz();
+        mostrarResultado("Matriz B", B);
+        
+        // Operaciones bÃ¡sicas
+        mostrarResultado("A + B", A.suma(B));
+        mostrarResultado("A * B", A.multiplicacion(B));
+        mostrarResultado("Transpuesta de A", A.transpuesta());
+        std::cout << "\nDeterminante de A: " << A.determinante() << "\n";
+        
+        // Matrices de diferentes dimensiones
+        Matriz C = crearMatriz(3, 2);
+        std::cout << "\n=== Llenar matriz C (3x2) ===";
+        C.llenarMatriz();
+        mostrarResultado("Matriz C", C);
+        
+        // Operaciones con dimensiones diferentes
+        mostrarResultado("C * A", C.multiplicacion(A));
+        mostrarResultado("Transpuesta de C", C.transpuesta());
+        
+        // Prueba de mÃ©todos aÃ±adir fila/columna
+        std::cout << "\n=== AÃ±adir fila y columna a C ===";
+        C.aÃ±adirFila();
+        C.aÃ±adirColumna();
+        mostrarResultado("C modificada", C);
+        
+        // Operaciones invÃ¡lidas (manejo de errores)
+        std::cout << "\n=== Pruebas de manejo de errores ===";
+        try {
+            Matriz D = A.suma(C);
+        } catch (const std::exception& e) {
+            std::cerr << "\nError en suma: " << e.what();
+        }
+        
+        try {
+            Matriz E = crearMatriz(0, 0);
+        } catch (const std::exception& e) {
+            std::cerr << "\nError en creacion: " << e.what();
+        }
+        
+        try {
+            double det = C.determinante();
+        } catch (const std::exception& e) {
+            std::cerr << "\nError en determinante: " << e.what();
+        }
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
+    }
+    
+    std::cout << "\n\n=== Todas las operaciones completadas ===" << std::endl;
+    return 0;
+}
